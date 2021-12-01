@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <title>Star Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      *
+      {
+        box-sizing: border-box;
+      }
+      body
+      {
+        background-color: powderblue;
+      }
+      .col_ends
+      {
+        width: 10%;
+        float: left;
+        padding: 15px;
+        /* border: 1px solid red; */
+      }
+      .col_left_mid
+      {
+        width: 50%;
+        float: left;
+        padding: 15px;
+        background-color: white;
+        text-align: center;
+        border: 1px outset black;
+      }
+      .col_right_mid
+      {
+        width: 30%;
+        float: left;
+        padding: 15px;
+        background-color: white;
+        text-align: center;
+        border: 1px outset black;
+      }
+    </style>
+  <head>
+
+  <body>
+    <br><br>
+    <div class="row" style="height:12.5%;">
+      <div class="col_ends"></div>
+      <div style="width:80%; height:100%; float:left; padding:15px; background-color:white; text-align:center; border:1px outset black;">
+        <h1>Star Tracker</h1>
+      </div>
+      <div class="col_ends"></div>
+    </div>
+    
+    <div class="row" style="height:70%;">
+      <div class="col_ends"></div>
+      <div class="col_left_mid" style="height:100%;">
+        <img src="img.jpg" width="100%">
+      </div>
+
+      <div class="col_right_mid" style="height:100%;">
+        <h3>Celstial Control</h3>
+        <form action="/cgi-bin/celest.cgi" method="POST">
+          <label for="body">Select Body:</label>
+          <select name="body" id="body" style="text-align:center;">
+            <option disable selected value>-- select option --</option>
+            <option value="moon">The Moon</option>
+            <option value="sun">The Sun</option>
+            <option value="m31">Messier 31</option>
+            <option value="m33">Messier 33</option>
+            <option value="lmc">Large Magellanic Cloud</option>
+          </select>
+          <br><br>
+          <label for="exposure">Enter Exposure Time (s):</label>
+          <input type="text" name="exposure">
+          <br><br>
+          <label for="iso">Enter ISO:</label>
+          <input type="text" name="iso">
+          <br><br>
+          <input type="submit" value="Submit">
+          <input type="submit" value="ABORT">
+          <br><br>
+        </form>
+        <br>
+        <h3>Manual Control</h3>
+        <form action="/cgi-bin/manual_control.cgi" method="POST">
+          <label for="alt">Enter Alt (deg):</label>
+          <input type="text" name="alt">
+          <br><br>
+          <label for="az">Enter Az (deg):</label>
+          <input type="text" name="az">
+          <br><br>
+          <label for="v_alt">Enter Alt Velocity (deg/s):</label>
+          <input type="text" name="v_alt">
+          <br><br>
+          <label for="v_az">Enter Az Velocity (deg/s):</label>
+          <input type="text" name="v_az">
+          <br><br>
+          <input type="submit" value="Submit">
+          <input type="submit" value="Zero">
+          <input type="submit" value="ABORT">
+        </form>
+      </div>
+
+      <div class="col_ends"></div>
+    </div>
+    <div class="row" style="height:12.5%;">
+      <div class="col_ends"></div>
+      <div style="width:80%; height:105%; float:left; padding:15px; background-color:white; text-align:center; border:1px outset black;">
+        <p>ENME441 Final Project<br>Jeremy Carter and Ryan Matheu<br>Fall 2021</p>
+      </div>
+      <div class="col_ends"></div>
+    
+  </body>
+</html>
+
+
+
