@@ -16,8 +16,30 @@ from light_stepper import Stepper
 # OOP DRULEZ
 
 # our two stepper motors controlling our movement axes
-# az_step = Stepper(*args1)
-# alt_step = Stepper(*args2)
+az_step = Stepper(*args1)
+alt_step = Stepper(*args2)
+
+
+class rotate(Thread):
+    """
+
+    """
+
+    def __init__(self, stepper):
+        super().__init__()
+        self.stepper = stepper
+        self.d_a = 0.0
+        self.stop_flag = False
+
+    def run(self):
+        while not self.stop_flag:
+            self.stepper.rotate(self.d_a, np.sign(self._d_a))
+
+    def stop(self):
+        self.stop_flag = True
+
+    def set_angle(self, angle):
+        self.d_a = angle
 
 
 def zero(*args):
@@ -26,15 +48,6 @@ def zero(*args):
     """
 
     pass
-
-
-def rotate(stepper, d_a, stop_flag=True):
-    """A function to continuously rotate the tracker.
-
-    """
-
-    while not stop_flag:
-        stepper.rotate(d_a, np.sign(d_a))
 
 
 def get_moon_coords(
@@ -83,20 +96,16 @@ def track_body(
     It was chosen to do it this way so that the axes move simultaneously.
     """
 
-    stop_flag = False # stop_flag tells the threads when to die so to speak
-
     # if we wish to zero the tracker before tracking
     if zero: zero()
 
     # retrieving the coordinates based on the currently selected body
     coords = bodies[body](lat, lon, obstime, dt, height)
 
-    # initialize our shared variables to be zero
-    alt_d_a, az_d_a = 0.0, 0.0
-
     # create our threads
-    alt = Thread(target=rotate, args=(alt_step, alt_d_a, stop_flag))
-    az = Thread(target=rotate, args=(alt_step, alt_d_a, stop_flag))
+    alt = rotate(alt_step)
+    az = rotate(az_step)
+
     # start our threads
     alt.start()
     az.start()
@@ -104,11 +113,11 @@ def track_body(
     for coord in coords:
         tic = time.time()
         coord -= [alt_step.angle, az_step.angle]
-        alt_d_a, az_d_a = coord
+        alt.set_angle(coord[0])
+        az.set_angle(coord[1])
         while time.time() - tic < dt: pass
 
-    stop_flag = True # should kill the threads
-
+    alt.stop(); az.stop()
 
 def capture(
             shutter_speed,
