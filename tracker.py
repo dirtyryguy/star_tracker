@@ -119,6 +119,7 @@ def track_body(
 
     alt.stop(); az.stop()
 
+    
 def capture(
             shutter_speed,
             iso,
