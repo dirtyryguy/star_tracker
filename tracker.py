@@ -1,5 +1,5 @@
 # Add to PYHTONPATH
-# from light_stepper import Stepper
+from light_stepper import Stepper
 import time
 import numpy as np
 from threading import Thread
@@ -9,7 +9,6 @@ from datetime import datetime
 from astropy.coordinates import EarthLocation, AltAz
 from astropy.time import Time
 import astropy.units as u
-from light_stepper import Stepper
 
 
 # FUNCTIONAL RULEZ
@@ -46,8 +45,16 @@ def zero(*args):
     """A function used to zero the tracker in both axes.
 
     """
+    
+    def temp(stepper):
+        while not stepper.zeroed():
+            stepper.halfstep(-1*stepper.rot_dir)
 
-    pass
+    alt = Thread(target=temp, args=(alt_step,))
+    az = Thread(target=temp, args=(az_step,))
+
+    alt.start(); az.start()
+    alt.join(); az.join()
 
 
 def get_moon_coords(
@@ -119,7 +126,7 @@ def track_body(
 
     alt.stop(); az.stop()
 
-    
+
 def capture(
             shutter_speed,
             iso,

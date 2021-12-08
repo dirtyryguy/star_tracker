@@ -20,7 +20,7 @@ class Stepper:
 
     CONST_DEG_PER_HSTEP = 360.0/512.0*8.0
 
-    def __init__(self, pins=(18, 21, 22, 23)):
+    def __init__(self, pins=(18, 21, 22, 23), zero_pin=None):
         """
 
         """
@@ -28,11 +28,15 @@ class Stepper:
         self.pins = pins
         for pin in self.pins:
             gpio.setup(pin, gpio.OUT, initial=0)
+
+        self.z_pin = zero_pin
+        gpio.setup(self.z_pin, gpio.IN, pull_up_down=gpio.PUD_DOWN) # 0V off 5V on
         
         self.curr_step = 0
         self.angle = 0.0
+        self.rot_dir = 0
 
-        self.__update()
+        self.update()
 
 
     def delay_us(tus):
@@ -45,7 +49,15 @@ class Stepper:
             pass
 
 
-    def __update(self):
+    def zeroed(self):
+        """
+
+        """
+
+        return bool(gpio.input(self.z_pin))
+
+
+    def update(self):
         """
 
         """
@@ -55,7 +67,7 @@ class Stepper:
             gpio.output(pin, temp[n])
 
 
-    def __halfstep(self, rot_dir): # -1 for cw, 1 for ccw
+    def halfstep(self, rot_dir): # -1 for cw, 1 for ccw
         """
 
         """
@@ -66,17 +78,17 @@ class Stepper:
         elif s < 0: s = 7
         self.curr_step = s
         self.angle += rot_dir*CONST_DEG_PER_HSTEP
-        self.__update()
+        self.update()
 
 
-    def __turnsteps(self, steps, rot_dir, speed=1.0):
+    def turnsteps(self, steps, rot_dir, speed=1.0):
         """
 
         """
 
         for _ in range(steps):
             for __ in range(8):
-                self.__halfstep(rot_dir)
+                self.halfstep(rot_dir)
                 Stepper.delay_us(1000/speed)
 
 
@@ -84,6 +96,7 @@ class Stepper:
         """
 
         """
-
+        
+        self.rot_dir = rot_dir
         steps = int(angle/CONST_DEG_PER_HSTEP)
-        self.__turnsteps(steps, rot_dir, speed)
+        self.turnsteps(steps, rot_dir, speed)
