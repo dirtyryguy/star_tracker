@@ -48,7 +48,7 @@ def zero(*args):
     
     def temp(stepper):
         while not stepper.zeroed():
-            stepper.halfstep(-1*stepper.rot_dir)
+            stepper.turnsteps(1, -1*stepper.rot_dir)
 
     alt = Thread(target=temp, args=(alt_step,))
     az = Thread(target=temp, args=(az_step,))

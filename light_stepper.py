@@ -36,7 +36,7 @@ class Stepper:
         self.angle = 0.0
         self.rot_dir = 0
 
-        self.update()
+        self.__update()
 
 
     def delay_us(tus):
@@ -57,7 +57,7 @@ class Stepper:
         return bool(gpio.input(self.z_pin))
 
 
-    def update(self):
+    def __update(self):
         """
 
         """
@@ -67,7 +67,7 @@ class Stepper:
             gpio.output(pin, temp[n])
 
 
-    def halfstep(self, rot_dir): # -1 for cw, 1 for ccw
+    def __halfstep(self, rot_dir): # -1 for cw, 1 for ccw
         """
 
         """
@@ -78,7 +78,7 @@ class Stepper:
         elif s < 0: s = 7
         self.curr_step = s
         self.angle += rot_dir*CONST_DEG_PER_HSTEP
-        self.update()
+        self.__update()
 
 
     def turnsteps(self, steps, rot_dir, speed=1.0):
@@ -88,7 +88,7 @@ class Stepper:
 
         for _ in range(steps):
             for __ in range(8):
-                self.halfstep(rot_dir)
+                self.__halfstep(rot_dir)
                 Stepper.delay_us(1000/speed)
 
 
