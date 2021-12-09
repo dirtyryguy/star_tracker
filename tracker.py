@@ -59,17 +59,19 @@ class Status(Thread):
     def run(self):
         try:
             while 1: # infinitly looping thread 0_0
-                print_status(self.stat)
+                self.print_status()
                 time.sleep(1)
         except: pass
         finally: # this should always run at the end of the process
             self.lcd.clear()
             self.lcd.set_backlight(0)
 
-    def set(stat): # four charater status flags: IDLE, MVNG, CPTR, ZERO
+    def set(self, stat): # four charater status flags: IDLE, MVNG, CPTR, ZERO
         self.stat = stat
+
+    def print_status(self):
         lcd.print_line(f'alt: {alt_step.angle:4.1f} STATUS', line=0)
-        lcd.print_line(f'az: {az_step.angle:5.1f}  {status}', line=1)
+        lcd.print_line(f'az: {az_step.angle:5.1f}  {self.status}', line=1)
         
 
 def zero(*args):
@@ -77,6 +79,7 @@ def zero(*args):
 
     """
     
+    status.set('ZERO')
     def temp(stepper):
         while not stepper.zeroed():
             stepper.turnsteps(1, -1*stepper.rot_dir)
@@ -86,6 +89,7 @@ def zero(*args):
 
     alt.start(); az.start()
     alt.join(); az.join()
+    status.set('IDLE')
 
 
 def get_moon_coords(
@@ -148,6 +152,7 @@ def track_body(
     # start our threads
     alt.start()
     az.start()
+    status.set('MVNG')
 
     for coord in coords:
         tic = time.time()
@@ -157,6 +162,7 @@ def track_body(
         while time.time() - tic < dt: pass
 
     alt.stop(); az.stop()
+    status.set('IDLE')
 
 
 def capture(
@@ -171,6 +177,7 @@ def capture(
     
     from fractions import Fraction
     
+    status.set('CPTR')
     with PiCamera(framerate=Fraction(1, 6)) as cam:
         cam.shutter_speed = shutter_speed
         camera.iso = iso
@@ -178,6 +185,7 @@ def capture(
         time.sleep(2)
         camera.exposure_mode = 'off'
         camera.capture(f'{path}/{name}.jpg')
+    status.set('IDLE')
 
 
 def multi_capture(*args):
