@@ -4,6 +4,7 @@ import time
 import numpy as np
 from threading import Thread
 from picamera import PiCamera
+from l2clcd import l2clcd
 # import matplotlib.pyplot as plt
 from datetime import datetime
 from astropy.coordinates import EarthLocation, AltAz
@@ -18,9 +19,11 @@ import astropy.units as u
 az_step = Stepper(*args1)
 alt_step = Stepper(*args2)
 
+# instanitate our LCD module
+status = Status()
 
-class rotate(Thread):
-    """
+class Rotate(Thread):
+    """A threaded rotation class that controls the position(s) of the two steppers.
 
     """
 
@@ -31,7 +34,7 @@ class rotate(Thread):
         self.stop_flag = False
 
     def run(self):
-        while not self.stop_flag:
+        while not self.stop_flag: # this is important
             self.stepper.rotate(self.d_a, np.sign(self._d_a))
 
     def stop(self):
@@ -40,6 +43,34 @@ class rotate(Thread):
     def set_angle(self, angle):
         self.d_a = angle
 
+
+class Status(Thread):
+    """A daemon thread that displays information to an LCD.
+
+    """
+
+    def __init__(self, stat='IDLE'):
+        super().__init__(daemon=True)
+        self.stat = stat
+        self.lcd = i2clcd(i2c_bus=1, i2c_addr=0x27, lcd_width=16)
+        self.lcd.init()
+        self.lcd.set_backlight(1)
+
+    def run(self):
+        try:
+            while 1: # infinitly looping thread 0_0
+                print_status(self.stat)
+                time.sleep(1)
+        except: pass
+        finally: # this should always run at the end of the process
+            self.lcd.clear()
+            self.lcd.set_backlight(0)
+
+    def set(stat): # four charater status flags: IDLE, MVNG, CPTR, ZERO
+        self.stat = stat
+        lcd.print_line(f'alt: {alt_step.angle:4.1f} STATUS', line=0)
+        lcd.print_line(f'az: {az_step.angle:5.1f}  {status}', line=1)
+        
 
 def zero(*args):
     """A function used to zero the tracker in both axes.
@@ -101,6 +132,7 @@ def track_body(
     
     This method spawns two threads that operate the individual rotation axes of the tracker.
     It was chosen to do it this way so that the axes move simultaneously.
+
     """
 
     # if we wish to zero the tracker before tracking
@@ -110,8 +142,8 @@ def track_body(
     coords = bodies[body](lat, lon, obstime, dt, height)
 
     # create our threads
-    alt = rotate(alt_step)
-    az = rotate(az_step)
+    alt = Rotate(alt_step)
+    az = Rotate(az_step)
 
     # start our threads
     alt.start()
@@ -133,7 +165,7 @@ def capture(
             name=None,
             path=None
            ):
-    """
+    """Function to control the capturing of photos.
 
     """
     
@@ -146,3 +178,11 @@ def capture(
         time.sleep(2)
         camera.exposure_mode = 'off'
         camera.capture(f'{path}/{name}.jpg')
+
+
+def multi_capture(*args):
+    """Function for taking multiple photos.
+
+    """
+
+    pass
