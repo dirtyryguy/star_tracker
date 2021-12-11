@@ -74,10 +74,12 @@ class Stepper:
         
         s = self.curr_step
         s += rot_dir
-        if s > 7: s = 0
-        elif s < 0: s = 7
+        if s > 7:
+            s = 0
+        elif s < 0:
+            s = 7
         self.curr_step = s
-        self.angle += rot_dir*CONST_DEG_PER_HSTEP
+        self.angle += rot_dir*Stepper.CONST_DEG_PER_HSTEP
         self.__update()
 
 
@@ -87,9 +89,8 @@ class Stepper:
         """
 
         for _ in range(steps):
-            for __ in range(8):
-                self.__halfstep(rot_dir)
-                Stepper.delay_us(1000/speed)
+            self.__halfstep(rot_dir)
+            Stepper.delay_us(1000/speed)
 
 
     def rotate(self, angle, rot_dir, speed=1.0, deg=True):

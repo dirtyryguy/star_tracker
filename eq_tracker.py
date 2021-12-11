@@ -1,11 +1,11 @@
 # Add to PYHTONPATH
 from light_stepper import Stepper
 import time
-import numpy as np
 from threading import Thread
 from picamera import PiCamera
-from l2clcd import l2clcd
+from i2clcd import i2clcd
 from datetime import datetime
+import RPi.GPIO as gpio
 
 # FUNCTIONAL RULEZ
 # OOP DRULEZ
@@ -13,23 +13,21 @@ from datetime import datetime
 # some important constants
 GEAR_RATIO = 60/13
 EQ_PERIOD = 86164 # sec
-STEP_PER_ROT = GEAR_RATIO*4096
+STEPS_PER_ROT = GEAR_RATIO*4096
 SEC_PER_STEP = EQ_PERIOD/STEPS_PER_ROT
 
 # stepper controlling the equatorial angle
-eq_step = Stepper(*args1)
+eq_step = Stepper(pins=(20, 21, 19, 26), zero_pin=16)
 
-# instanitate our LCD module
-status = Status()
 
 class Rotate(Thread):
     """A threaded rotation class that controls the position(s) of the stepper(s).
 
     """
     
-    def __init__(self, stepper, rot_dir=1):
+    def __init__(self, rot_dir=1):
         super().__init__()
-        self.stepper = stepper
+        self.stepper = eq_step
         self.rot_dir = rot_dir
         self.stop_flag = False
 
@@ -71,14 +69,16 @@ class Status(Thread):
                 self.print_status()
                 time.sleep(1)
 
-                if (time.time() - tic) < self.sleep:
+                if (time.time() - tic) > self.sleep:
+                    print('sleeping')
                     self.lcd.set_backlight(0)
                 if self.awake:
                     self.awake = False
                     self.lcd.set_backlight(1)
                     tic = time.time()
                     
-        except: pass
+        except Exception as e:
+            print(e)
         finally: # this should always run at the end of the process
             self.lcd.clear()
             self.lcd.set_backlight(0)
@@ -87,12 +87,16 @@ class Status(Thread):
         self.stat = stat
 
     def print_status(self):
-        lcd.print_line(f'T+: {int(time.time() - self.start_time)}', line=0)
-        lcd.print_line(f'STATUS: {self.stat}', line=1)
+        self.lcd.print_line(f'T+: {int(time.time() - self.start_time)}', line=0)
+        self.lcd.print_line(f'STATUS: {self.stat}', line=1)
 
     def wake(self):
         self.awake = True
-        
+
+
+# instanitate our LCD module
+status = Status()
+
 
 def capture(
             shutter_speed,
@@ -132,6 +136,14 @@ def start():
     """
 
     """
-
-    eq_step.start()
+    eq = Rotate()
+    eq.start()
     status.start()
+    while 1: pass
+
+try:
+    start()
+except Exception as e:
+    print(e)
+finally:
+    gpio.cleanup()
