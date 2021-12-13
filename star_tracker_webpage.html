@@ -52,21 +52,16 @@
     <div class="row" style="height:70%;">
       <div class="col_ends"></div>
       <div class="col_left_mid" style="height:100%;">
-        <img src="img.jpg" width="100%">
+        <img src="https://astrobackyard.com/wp-content/uploads/2019/06/the-celestial-sphere.jpg" width="80%">
       </div>
 
       <div class="col_right_mid" style="height:100%;">
-        <h3>Celstial Control</h3>
-        <form action="/cgi-bin/celest.cgi" method="POST">
-          <label for="body">Select Body:</label>
-          <select name="body" id="body" style="text-align:center;">
-            <option disable selected value>-- select option --</option>
-            <option value="moon">The Moon</option>
-            <option value="sun">The Sun</option>
-            <option value="m31">Messier 31</option>
-            <option value="m33">Messier 33</option>
-            <option value="lmc">Large Magellanic Cloud</option>
-          </select>
+        <h3>Equatorial Control</h3>
+        <form action="/cgi-bin/celeste.cgi" method="POST">
+	  Auto Exposure: <input type="checkbox" name="auto" value="auto">
+          <br><br>
+          <label for="num_imgs">Enter Number of Images:</label>
+          <input type="text" name="num_imgs">
           <br><br>
           <label for="exposure">Enter Exposure Time (s):</label>
           <input type="text" name="exposure">
@@ -78,24 +73,18 @@
           <input type="submit" value="ABORT">
         </form>
         <br>
-        <h3>Manual Control</h3>
-        <form action="/cgi-bin/manual_control.cgi" method="POST">
-          <label for="alt">Enter Alt (deg):</label>
-          <input type="text" name="alt">
-          <br><br>
-          <label for="az">Enter Az (deg):</label>
-          <input type="text" name="az">
-          <br><br>
-          <label for="v_alt">Enter Alt Velocity (deg/s):</label>
-          <input type="text" name="v_alt">
-          <br><br>
-          <label for="v_az">Enter Az Velocity (deg/s):</label>
-          <input type="text" name="v_az">
-          <br><br>
-          <input type="submit" value="Submit">
-          <input type="submit" value="Zero">
-          <input type="submit" value="ABORT">
-        </form>
+	<h3>Manual Control</h3>
+	<form action="/cgi-bin/manual_control.cgi" method="POST">
+	  <input type="submit" value="-25" name="-25">
+	  <input type="submit" value="-10" name="-10">
+	  <input type="submit" value="-5" name="-5">
+	  <input type="submit" value="+5" name="+5">
+	  <input type="submit" value="+10" name="+10">
+	  <input type="submit" value="+25" name="+25">
+	</form>
+	<br>
+        <h3>Download Images (zip)<h3>
+        <a href="path" download>Image(s)</a>
       </div>
 
       <div class="col_ends"></div>

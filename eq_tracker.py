@@ -6,6 +6,7 @@ from picamera import PiCamera
 from i2clcd import i2clcd
 from datetime import datetime
 import RPi.GPIO as gpio
+import os
 
 # FUNCTIONAL RULEZ
 # OOP DRULEZ
@@ -26,7 +27,7 @@ class Rotate(Thread):
     """
     
     def __init__(self, rot_dir=1):
-        super().__init__()
+        super().__init__(daemon=True)
         self.stepper = eq_step
         self.rot_dir = rot_dir
         self.stop_flag = False
@@ -52,12 +53,15 @@ class Status(Thread):
 
     """
 
-    def __init__(self, stat='IDLE'):
+    def __init__(self, stat='IDLE', wake_pin=4):
         super().__init__(daemon=True)
         self.stat = stat
         self.lcd = i2clcd(i2c_bus=1, i2c_addr=0x27, lcd_width=16)
         self.lcd.init()
         self.lcd.set_backlight(1)
+        self.wake_pin=4
+        gpio.setup(self.wake_pin, gpio.IN, pull_up_down=gpio.PUD_DOWN)
+        gpio.add_event_detect(self.wake_pin, gpio.RISING, callback=self.wake, bouncetime=100)
         self.sleep = 30 # sec
         self.awake = False
         self.start_time = time.time()
@@ -67,10 +71,10 @@ class Status(Thread):
             tic = time.time()
             while 1: # infinitly looping thread 0_0
                 self.print_status()
-                time.sleep(1)
+                time.sleep(0.5)
 
                 if (time.time() - tic) > self.sleep:
-                    print('sleeping')
+                    # print('sleeping')
                     self.lcd.set_backlight(0)
                 if self.awake:
                     self.awake = False
@@ -78,10 +82,12 @@ class Status(Thread):
                     tic = time.time()
                     
         except Exception as e:
-            print(e)
+            pass
+            # print(e)
         finally: # this should always run at the end of the process
             self.lcd.clear()
             self.lcd.set_backlight(0)
+            gpio.cleanup()
 
     def set(self, stat): # four charater status flags: IDLE, MVNG, CPTR, ZERO
         self.stat = stat
@@ -90,19 +96,16 @@ class Status(Thread):
         self.lcd.print_line(f'T+: {int(time.time() - self.start_time)}', line=0)
         self.lcd.print_line(f'STATUS: {self.stat}', line=1)
 
-    def wake(self):
+    def wake(self, *args):
         self.awake = True
-
-
-# instanitate our LCD module
-status = Status()
 
 
 def capture(
             shutter_speed,
             iso,
             name=None,
-            path=None
+            path=None,
+            auto=False
            ):
     """Function to control the capturing of photos.
 
@@ -110,40 +113,48 @@ def capture(
     
     from fractions import Fraction
     
-    status.set('CPTR')
     with PiCamera(framerate=Fraction(1, 6)) as cam:
-        cam.shutter_speed = shutter_speed
-        camera.iso = iso
+        if auto:
+            cam.rotation = 180
+            time.sleep(2)
+            cam.capture(f'{path}/{name}.jpg')
+        else:
+            cam.shutter_speed = shutter_speed
+            cam.iso = iso
+            cam.rotation = 180
 
-        time.sleep(2)
-        camera.exposure_mode = 'off'
-        camera.capture(f'{path}/{name}.jpg')
-    status.set('IDLE')
+            time.sleep(2)
+            cam.exposure_mode = 'off'
+            cam.capture(f'{path}/{name}.jpg')
 
 
-def multi_capture(num_imgs, delay, shutter_speed, iso, path=None):
+def multi_capture(num_imgs, delay, shutter_speed, iso, path=None, auto=False):
     """Function for taking multiple photos.
 
     """
 
-    for n in num_imgs:
-        img_name = datetime.now(f'img_%y-%m-%d_%H-%M_{str(n+1)}')
-        capture(shutter_speed, iso, name=img_name, path=path)
+    status = Status()
+    status.start()
+    m = len(os.listdir(path))
+    for n in range(num_imgs):
+        status.set(f'CPTR {n+1}/{num_imgs}')
+        img_name = f'img_{m+n+1}'
+        # img_name = datetime.now(f'img_%y-%m-%d_%H-%M_{str(n+1)}')
+        capture(shutter_speed, iso, name=img_name, path=path, auto=auto)
         time.sleep(delay)
+    status.set('IDLE')
 
 
-def start():
+def start_tracker():
     """
 
     """
     eq = Rotate()
-    eq.start()
-    status.start()
-    while 1: pass
-
-try:
-    start()
-except Exception as e:
-    print(e)
-finally:
-    gpio.cleanup()
+    try:
+        eq.start()
+        while 1: pass
+    except Exception as e:
+        pass
+        # print(e)
+    finally:
+        gpio.cleanup()

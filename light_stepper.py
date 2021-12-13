@@ -1,8 +1,10 @@
 # Add to PYTHONPATH
 import RPi.GPIO as gpio
 import time
+import numpy as np
 
 gpio.setmode(gpio.BCM)
+gpio.setwarnings(False)
 
 class Stepper:
     """
@@ -18,7 +20,7 @@ class Stepper:
            (0,0,0,1),
            (1,0,0,1))
 
-    CONST_DEG_PER_HSTEP = 360.0/512.0*8.0
+    CONST_DEG_PER_HSTEP = 360.0/(512.0*8.0)
 
     def __init__(self, pins=(18, 21, 22, 23), zero_pin=None):
         """
@@ -73,7 +75,7 @@ class Stepper:
         """
         
         s = self.curr_step
-        s += rot_dir
+        s += np.sign(rot_dir)
         if s > 7:
             s = 0
         elif s < 0:
@@ -93,11 +95,11 @@ class Stepper:
             Stepper.delay_us(1000/speed)
 
 
-    def rotate(self, angle, rot_dir, speed=1.0, deg=True):
+    def rotate(self, angle, rot_dir, gear_ratio, speed=1.0, deg=True):
         """
 
         """
         
         self.rot_dir = rot_dir
-        steps = int(angle/CONST_DEG_PER_HSTEP)
+        steps = int(angle/(Stepper.CONST_DEG_PER_HSTEP*gear_ratio))
         self.turnsteps(steps, rot_dir, speed)
