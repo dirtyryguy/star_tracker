@@ -6,7 +6,12 @@ from picamera import PiCamera
 from i2clcd import i2clcd
 from datetime import datetime
 import RPi.GPIO as gpio
+import dht11
 import os
+
+gpio.setwarnings(False)
+gpio.setmode(gpio.BCM)
+gpio.cleanup()
 
 # FUNCTIONAL RULEZ
 # OOP DRULEZ
@@ -19,6 +24,9 @@ SEC_PER_STEP = EQ_PERIOD/STEPS_PER_ROT
 
 # stepper controlling the equatorial angle
 eq_step = Stepper(pins=(20, 21, 19, 26), zero_pin=16)
+
+# temp humidity sensor
+th_sens = dht11.DHT11(pin=14)
 
 
 class Rotate(Thread):
@@ -98,6 +106,19 @@ class Status(Thread):
 
     def wake(self, *args):
         self.awake = True
+
+
+def get_humidity():
+    """
+
+    """
+
+    res = th_sens.read()
+    if res.is_valid():
+        rtn = res.humidity
+    else:
+        rtn = 0.0
+    return rtn
 
 
 def capture(

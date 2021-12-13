@@ -42,19 +42,24 @@ path = '/home/pi/html/images/'
 data = cgi.FieldStorage()
 
 auto = 'auto' in data
-num_imgs = int(data.getvalue('num_imgs'))
 
-if auto:
-    ss = None
-    iso = None
-else:
-    ss = int(data.getvalue('exposure'))
-    iso = int(data.getvalue('iso'))
-delay = 0
+humid = 'humidity' in data
+humid_val = 0.0
 
-if False:
-    lat, lon = geocoder.ip('me').latlng
+
+if humid:
+    humid_val = eq_tracker.get_humidity()
 else:
+    num_imgs = int(data.getvalue('num_imgs'))
+    
+    if auto:
+        ss = None
+        iso = None
+    else:
+        ss = int(data.getvalue('exposure'))
+        iso = int(data.getvalue('iso'))
+    delay = 0
+
     travel = mp.Process(target=eq_tracker.start_tracker)
     capture = mp.Process(target=eq_tracker.multi_capture, args=(num_imgs, delay, ss, iso, path, auto))
     
@@ -144,6 +149,13 @@ print(
         <form action="/cgi-bin/celeste.cgi" method="POST">
           Auto Exposure: <input type="checkbox" name="auto" value="auto">
           <br><br>
+"""
+)
+
+print(f'Get Humidity: <input type="submit" name="humidity" value=" "> {humid_val:3.1f}%<br><br>')
+
+print(
+"""
           <label for="num_imgs">Enter Number of Images:</label>
           <input type="text" name="num_imgs">
           <br><br>
